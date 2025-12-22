@@ -1,0 +1,61 @@
+1. Recipe App - ( React P2 )
+React
+
+FrontEnd
+
+Description:
+
+A dynamic recipe app that fetches data from a public meals API, allowing users to search and filter recipes based on ingredients, categories, or meal types.
+
+Project Documentation:
+Recipe App
+Develop a dynamic recipe application that allows users to browse, search, and filter
+recipes based on various criteria using data fetched from a public meals API. This
+project focuses on implementing core React functionalities, ensuring a responsive
+user interface, and providing a smooth user experience.
+What to do?
+Recipe Listings:
+● Provide a clean UI to list recipes fetched from a public meals API.
+● Display key recipe details such as name, thumbnail image, and category.
+● Each recipe card should be clickable to view complete recipe details on a
+separate page or modal.
+Search and Filter:
+● Implement a search bar to allow users to search for recipes by name or
+keyword.
+● Add filter options for users to narrow down recipes by ingredients, categories,
+or meal types.
+● Ensure filters and search can work together for refined results.
+Recipe Details:
+● Show full recipe information including instructions, ingredients, category, and
+video link (if available).
+● Allow users to return to the main recipe list easily.
+
+Favorites (Optional):
+● Allow users to mark recipes as favorites.
+● Store favorites in localStorage so they persist across sessions.
+User Features:
+● View a list of recipes and search through them.
+● Filter recipes by categories and ingredients.
+● View full details for a selected recipe.
+● (Optional) Save favorite recipes for later viewing.
+Techstacks needs to be used:
+● React JS
+● TailwindCSS for styling
+● Axios or fetch API for making requests
+● Public API: https://www.themealdb.com/api.php
+How do I submit my work?
+● Deploy your web application using Netlify (https://www.netlify.com)
+● Push all your work files to GitHub.
+● Submit your URLs in the portal.
+Terms and Conditions:
+● You agree to not share this confidential document with anyone.
+● You agree to open-source your code (it may even look good on your profile!).
+Do not mention our company’s name anywhere in the code.
+● We will never use your source code under any circumstances for any
+commercial purposes; this is just a basic assessment task.
+
+NOTE: Any violation of Terms and conditions is strictly prohibited. You are bound to
+adhere to it
+
+API Documentations:
+https://www.themealdb.com/api.php
