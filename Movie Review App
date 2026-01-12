@@ -1,0 +1,756 @@
+==============================================================================================================================================================================================================================================================================
+README.md
+
+
+
+# React Movie Review App
+
+The React Movie Review App is a dynamic, responsive web application that allows users to browse, search, filter, and rate movies using data fetched from The Movie Database (TMDB) API. Users can view detailed information about each movie and rate them using a star-based system, with ratings persisted in the browser's localStorage.
+
+## Table of Contents
+
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Setup & Installation](#setup--installation)
+- [Core Concepts](#core-concepts)
+  - [State Management](#state-management)
+  - [API Integration](#api-integration)
+  - [Routing](#routing)
+  - [Styling](#styling)
+- [Key Components & Files](#key-components--files)
+- [Extending the App](#extending-the-app)
+- [Technologies Used](#technologies-used)
+- [License](#license)
+
+## Features
+
+- Fetches movie data from the TMDB API
+- Displays movies in a responsive grid layout with individual movie cards
+- Search bar for finding movies by title
+- Filter bar for filtering movies by genre, year, and minimum rating
+- View detailed movie information, including description, cast, and release details
+- Add and update star-based ratings for movies (persisted in localStorage)
+- Responsive design for optimal viewing on all devices
+
+## Project Structure
+
+The project is organized into the following directory structure:
+
+```
+Movie-Review-App/
+├── src/
+│   ├── components/
+│   │   ├── FilterBar.jsx
+│   │   ├── MovieCard.jsx
+│   │   ├── MovieDetails.jsx
+│   │   ├── SearchBar.jsx
+│   │   └── StarRating.jsx
+│   ├── hooks/
+│   │   ├── apiConfig.js
+│   │   ├── useFetchGenres.js
+│   │   ├── useFetchMovieDetails.js
+│   │   └── useFetchMovies.js
+│   ├── pages/
+│   │   └── MovieList.jsx
+│   ├── slices/
+│   ├── store/
+│   ├── App.jsx
+│   ├── index.css
+│   └── main.jsx
+├── .gitignore
+├── eslint.config.js
+├── index.html
+├── package.json
+├── README.md
+├── tailwind.config.js
+└── vite.config.js
+```
+
+- `src/components/` — React components for UI
+- `src/hooks/` — Custom React hooks
+- `src/pages/` — Page components
+- `src/slices/` — (Reserved for Redux slices if needed)
+- `src/store/` — (Reserved for Redux store configuration if needed)
+- `App.jsx` — Main application logic
+
+## Setup & Installation
+
+1. **Clone the repository:**
+	```sh
+	git clone <your-repo-url>
+	cd Movie-Review-App/
+	```
+2. **Install the dependencies:**
+	```sh
+	npm install
+	```
+3. **Start the development server:**
+	```sh
+	npm run dev
+	```
+4. **Build for production:**
+	```sh
+	npm run build
+	```
+
+After running `npm run dev`, open your browser and navigate to the localhost URL shown in the terminal to view the application.
+
+## Core Concepts
+
+### State Management
+- Uses React Hooks for local state management.
+- Ratings are persisted in localStorage for each movie.
+- (Redux Toolkit can be added for global state if needed.)
+
+### API Integration
+- All API requests use the native Fetch API.
+- The base URL and API key are defined in `src/hooks/apiConfig.js`.
+- Custom hooks:
+  - `useFetchMovies`: Fetches movies (popular or by search query)
+  - `useFetchGenres`: Fetches movie genres
+  - `useFetchMovieDetails`: Fetches detailed info for a selected movie
+
+### Routing
+- (Optional) React Router can be added for multi-page navigation.
+- By default, the app is a single-page application with modal details.
+
+### Styling
+- Uses Tailwind CSS for utility-first styling.
+- Custom colors and fonts are defined in `tailwind.config.js` and `index.css`.
+
+## Key Components & Files
+
+- `src/App.jsx`: Main app component, renders the movie list page.
+- `src/pages/MovieList.jsx`: Displays the movie grid, search bar, and filters.
+- `src/components/MovieCard.jsx`: Card UI for each movie, includes star rating.
+- `src/components/MovieDetails.jsx`: Modal for detailed info on a selected movie.
+- `src/components/SearchBar.jsx`: Search input for movies.
+- `src/components/FilterBar.jsx`: Dropdowns for genre, year, and rating filters.
+- `src/components/StarRating.jsx`: Star-based rating UI, persists user rating.
+- `src/hooks/apiConfig.js`: API base URL and key.
+
+## Extending the App
+
+- **Add More Filters:** Extend `FilterBar` and update hooks to support more filter types.
+- **User Authentication:** Integrate authentication to allow users to save ratings to their account.
+- **Pagination:** Implement pagination for large result sets.
+- **UI Enhancements:** Add animations, dark mode, or more detailed movie views.
+
+## Technologies Used
+
+- React
+- React Hooks
+- Tailwind CSS for styling
+- The Movie Database (TMDB) API for movie data
+- Vite (for fast development and build)
+
+## License
+
+This project is for educational and demonstration purposes only.
+
+==============================================================================================================================================================================================================================================================================
+index.html
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>movie-review-app</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+
+==============================================================================================================================================================================================================================================================================
+main.jsx
+
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.jsx'
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+
+==============================================================================================================================================================================================================================================================================
+App.jsx
+
+import MovieList from './pages/MovieList';
+
+// App component renders the MovieList page
+export default function App() {
+  return <MovieList />;
+}
+
+==============================================================================================================================================================================================================================================================================
+MovieList.jsx
+
+// src/pages/MovieList.jsx
+// MovieList page displays a grid of movies using MovieCard
+// Uses semantic tags and TailwindCSS for layout
+import React, { useState } from 'react';
+import { useFetchMovies } from '../hooks/useFetchMovies';
+import { useFetchGenres } from '../hooks/useFetchGenres';
+import MovieCard from '../components/MovieCard';
+import MovieDetails from '../components/MovieDetails';
+import { useFetchMovieDetails } from '../hooks/useFetchMovieDetails';
+import SearchBar from '../components/SearchBar';
+import FilterBar from '../components/FilterBar';
+
+/**
+ * MovieList displays a grid of movies fetched from TMDB API.
+ * Handles search, filtering, and details view with robust error handling and W3C code documentation best practices.
+ */
+export default function MovieList() {
+  // State for search, filters, and selected movie
+  const [search, setSearch] = useState('');
+  const [selectedGenre, setSelectedGenre] = useState('');
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedRating, setSelectedRating] = useState('');
+  const [selectedMovieId, setSelectedMovieId] = useState(null);
+
+  // Fetch genres for filter bar
+  const { genres } = useFetchGenres();
+
+  // Fetch movies with search query
+  const { movies, loading, error } = useFetchMovies(search);
+
+  // Filter movies by genre, year, and rating with error handling
+  let filteredMovies = [];
+  try {
+    filteredMovies = movies.filter((movie) => {
+      const matchesGenre = selectedGenre ? movie.genre_ids?.includes(Number(selectedGenre)) : true;
+      const matchesYear = selectedYear ? (movie.release_date && movie.release_date.startsWith(selectedYear)) : true;
+      const matchesRating = selectedRating ? (movie.vote_average && Math.round(movie.vote_average / 2) >= Number(selectedRating)) : true;
+      return matchesGenre && matchesYear && matchesRating;
+    });
+  } catch (err) {
+    filteredMovies = [];
+    // Log error for debugging
+    console.error('Error filtering movies:', err);
+  }
+
+  // Fetch details for selected movie
+  const { movie: selectedMovie, loading: loadingDetails } = useFetchMovieDetails(selectedMovieId);
+
+  return (
+    <main className="container mx-auto px-4 py-8">
+      <SearchBar value={search} onChange={setSearch} />
+      <FilterBar
+        genres={genres}
+        selectedGenre={selectedGenre}
+        onGenreChange={setSelectedGenre}
+        selectedYear={selectedYear}
+        onYearChange={setSelectedYear}
+        selectedRating={selectedRating}
+        onRatingChange={setSelectedRating}
+      />
+      {loading && <p className="text-center mt-8">Loading movies...</p>}
+      {error && <p className="text-center mt-8 text-red-500">{error}</p>}
+      <section aria-label="Movie List">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {filteredMovies.length > 0 ? (
+            filteredMovies.map((movie) => (
+              <button
+                key={movie.id}
+                className="text-left p-0 bg-transparent border-none focus:outline-none"
+                onClick={() => setSelectedMovieId(movie.id)}
+                aria-label={`View details for ${movie.title}`}
+              >
+                <MovieCard movie={movie} />
+              </button>
+            ))
+          ) : (
+            !loading && <p className="col-span-full text-center text-gray-500">No movies found.</p>
+          )}
+        </div>
+      </section>
+      {selectedMovieId && (
+        <MovieDetails
+          movie={selectedMovie}
+          onClose={() => setSelectedMovieId(null)}
+        />
+      )}
+    </main>
+  );
+}
+
+==============================================================================================================================================================================================================================================================================
+apiConfig.js
+
+// src/hooks/apiConfig.js
+// Centralized API configuration for TMDB
+// Exports API_KEY and BASE_URL for reuse across hooks/components
+
+export const API_KEY = 'ede5424b78e2f4e2924dfbee10a9a3b1';
+export const BASE_URL = 'https://api.themoviedb.org/3';
+
+==============================================================================================================================================================================================================================================================================
+useFetchGenres.js
+
+// src/hooks/useFetchGenres.js
+// Custom React hook to fetch movie genres from TMDB API
+// Uses semantic tags, robust error handling, and W3C code documentation best practices
+import { useState, useEffect } from 'react';
+import { API_KEY, BASE_URL } from './apiConfig';
+
+/**
+ * Fetches a list of movie genres from TMDB API.
+ * @returns {Object} { genres, loading, error }
+ */
+export function useFetchGenres() {
+  const [genres, setGenres] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    /**
+     * Fetch genres from TMDB API with error handling.
+     * Uses async/await and try/catch for robust error reporting.
+     */
+    async function fetchGenres() {
+      setLoading(true);
+      setError(null);
+      try {
+        const url = `${BASE_URL}/genre/movie/list?api_key=${API_KEY}`;
+        let response;
+        try {
+          response = await fetch(url);
+        } catch (networkError) {
+          throw new Error('Network error while fetching genres.');
+        }
+        if (!response.ok) throw new Error('Failed to fetch genres.');
+        let data;
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          throw new Error('Error parsing genre data.');
+        }
+        setGenres(Array.isArray(data.genres) ? data.genres : []);
+      } catch (err) {
+        setError(err.message || 'Unknown error occurred while fetching genres.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchGenres();
+  }, []);
+
+  return { genres, loading, error };
+}
+
+==============================================================================================================================================================================================================================================================================
+useFetchMovieDetails.js
+
+// src/hooks/useFetchMovieDetails.js
+// Custom React hook to fetch detailed info for a single movie from TMDB API
+// Uses semantic tags, robust error handling, and W3C code documentation best practices
+import { useState, useEffect } from 'react';
+import { API_KEY, BASE_URL } from './apiConfig';
+
+/**
+ * Fetches detailed info for a single movie from TMDB API.
+ * @param {number|string} movieId - The TMDB movie ID
+ * @returns {Object} { movie, loading, error }
+ */
+export function useFetchMovieDetails(movieId) {
+  const [movie, setMovie] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!movieId) return;
+    /**
+     * Fetch movie details from TMDB API with error handling.
+     * Uses async/await and try/catch for robust error reporting.
+     */
+    async function fetchDetails() {
+      setLoading(true);
+      setError(null);
+      try {
+        const url = `${BASE_URL}/movie/${movieId}?api_key=${API_KEY}&append_to_response=credits`;
+        let response;
+        try {
+          response = await fetch(url);
+        } catch (networkError) {
+          throw new Error('Network error while fetching movie details.');
+        }
+        if (!response.ok) throw new Error('Failed to fetch movie details.');
+        let data;
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          throw new Error('Error parsing movie details data.');
+        }
+        setMovie(data);
+      } catch (err) {
+        setError(err.message || 'Unknown error occurred while fetching movie details.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchDetails();
+  }, [movieId]);
+
+  return { movie, loading, error };
+}
+
+==============================================================================================================================================================================================================================================================================
+useFetchMovies.js
+
+// src/hooks/useFetchMovies.js
+// Custom React hook to fetch movies from TMDB API
+// Uses semantic tags, robust error handling, and W3C code documentation best practices
+import { useState, useEffect } from 'react';
+import { API_KEY, BASE_URL } from './apiConfig';
+
+/**
+ * Fetches a list of movies from TMDB API.
+ * @param {string} query - Search query for movies.
+ * @returns {Object} { movies, loading, error }
+ */
+export function useFetchMovies(query = '') {
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    /**
+     * Fetch movies from TMDB API with error handling.
+     * Uses async/await and try/catch for robust error reporting.
+     */
+    async function fetchMovies() {
+      setLoading(true);
+      setError(null);
+      try {
+        let url;
+        if (query) {
+          url = `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}`;
+        } else {
+          url = `${BASE_URL}/movie/popular?api_key=${API_KEY}`;
+        }
+        let response;
+        try {
+          response = await fetch(url);
+        } catch (networkError) {
+          throw new Error('Network error while fetching movies.');
+        }
+        if (!response.ok) throw new Error('Failed to fetch movies.');
+        let data;
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          throw new Error('Error parsing movie data.');
+        }
+        setMovies(Array.isArray(data.results) ? data.results : []);
+      } catch (err) {
+        setError(err.message || 'Unknown error occurred while fetching movies.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchMovies();
+  }, [query]);
+
+  return { movies, loading, error };
+}
+
+==============================================================================================================================================================================================================================================================================
+StarRating.jsx
+
+// src/components/StarRating.jsx
+// StarRating component for displaying and setting user ratings
+// Uses semantic tags and TailwindCSS for styling
+import React from 'react';
+
+/**
+ * StarRating allows users to rate a movie and displays the average rating.
+ * Follows W3C code documentation best practices.
+ * @param {Object} props
+ * @param {number} props.value - Current user rating (1-5)
+ * @param {function} props.onChange - Handler for rating change
+ * @param {number} [props.average] - Average rating (optional)
+ */
+export default function StarRating({ value = 0, onChange, average }) {
+  // Render 5 stars, highlight up to the current value
+  return (
+    <div className="flex items-center gap-2" aria-label="Star rating">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          className={`text-2xl focus:outline-none ${value >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+          onClick={() => onChange(star)}
+          aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+        >
+          ★
+        </button>
+      ))}
+      {average !== undefined && (
+        <span className="ml-2 text-sm text-gray-600">Avg: {average.toFixed(1)}</span>
+      )}
+    </div>
+  );
+}
+
+==============================================================================================================================================================================================================================================================================
+SearchBar.jsx
+
+// src/components/SearchBar.jsx
+// SearchBar component for searching movies by title
+// Uses semantic tags and TailwindCSS for styling
+import React from 'react';
+
+/**
+ * SearchBar allows users to search movies by title.
+ * @param {Object} props
+ * @param {string} props.value - Current search value
+ * @param {function} props.onChange - Handler for input change
+ */
+export default function SearchBar({ value, onChange }) {
+  return (
+    <form className="mb-6" role="search" aria-label="Search Movies" onSubmit={e => e.preventDefault()}>
+      <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
+        Search by Title
+      </label>
+      <input
+        id="search"
+        type="text"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+        placeholder="Enter movie title..."
+        autoComplete="off"
+      />
+    </form>
+  );
+}
+
+==============================================================================================================================================================================================================================================================================
+MovieDetails.jsx
+
+// src/components/MovieDetails.jsx
+// MovieDetails component displays detailed info for a selected movie
+// Uses semantic tags and TailwindCSS for styling
+import React from 'react';
+
+/**
+ * MovieDetails displays detailed info for a movie, including cast and release details.
+ * @param {Object} props
+ * @param {Object} props.movie - Movie object from TMDB API
+ * @param {function} props.onClose - Handler to close the details view
+ */
+/**
+ * MovieDetails displays detailed info for a movie, including cast and release details.
+ * Handles errors gracefully and follows W3C code documentation best practices.
+ * @param {Object} props
+ * @param {Object} props.movie - Movie object from TMDB API
+ * @param {function} props.onClose - Handler to close the details view
+ */
+export default function MovieDetails({ movie, onClose }) {
+  if (!movie) return null;
+  let posterUrl = '/placeholder.png';
+  try {
+    if (movie.poster_path) {
+      posterUrl = `https://image.tmdb.org/t/p/w500${movie.poster_path}`;
+    }
+  } catch (err) {
+    // Log error for debugging
+    console.error('Error resolving poster URL:', err);
+  }
+  let genres = '';
+  try {
+    genres = movie.genres?.map(g => g.name).join(', ');
+  } catch (err) {
+    genres = '';
+  }
+  let cast = [];
+  try {
+    cast = movie.credits?.cast?.slice(0, 6) || [];
+  } catch (err) {
+    cast = [];
+  }
+  return (
+    <aside className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50" aria-modal="true" role="dialog">
+      <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full p-6 relative">
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl"
+          aria-label="Close details"
+        >
+          &times;
+        </button>
+        <div className="flex flex-col md:flex-row gap-6">
+          <img
+            src={posterUrl}
+            alt={movie.title}
+            className="w-40 h-60 object-cover rounded"
+          />
+          <div className="flex-1">
+            <header>
+              <h2 className="text-2xl font-bold mb-2">{movie.title}</h2>
+              <p className="text-gray-600 mb-2">{movie.release_date} | {movie.runtime} min</p>
+              <p className="mb-2">{genres}</p>
+            </header>
+            <section className="mb-4">
+              <h3 className="font-semibold mb-1">Overview</h3>
+              <p className="text-gray-700">{movie.overview}</p>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">Cast</h3>
+              <ul className="flex flex-wrap gap-2">
+                {cast.map(actor => (
+                  <li key={actor.cast_id} className="text-sm bg-gray-200 rounded px-2 py-1">
+                    {actor.name} <span className="text-gray-500">({actor.character})</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+==============================================================================================================================================================================================================================================================================
+MovieCard.jsx
+
+// src/components/MovieCard.jsx
+// MovieCard component displays a single movie's basic info
+// Uses semantic tags and TailwindCSS for styling
+import React from 'react';
+
+/**
+ * MovieCard displays a movie's poster, title, year, and genre.
+ * Handles user rating with robust error handling and W3C code documentation best practices.
+ * @param {Object} props
+ * @param {Object} props.movie - Movie object from TMDB API
+ */
+export default function MovieCard({ movie }) {
+  // User rating state, persisted in localStorage
+  const [userRating, setUserRating] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`rating_${movie.id}`);
+      return saved ? Number(saved) : 0;
+    } catch (err) {
+      // Log error for debugging
+      console.error('Error reading rating from localStorage:', err);
+      return 0;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      if (userRating > 0) {
+        localStorage.setItem(`rating_${movie.id}`, userRating);
+      }
+    } catch (err) {
+      // Log error for debugging
+      console.error('Error saving rating to localStorage:', err);
+    }
+  }, [userRating, movie.id]);
+
+  // TMDB vote_average is out of 10, convert to 1-5 scale
+  const average = movie.vote_average ? movie.vote_average / 2 : undefined;
+
+  return (
+    <article className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-full" aria-label={movie.title}>
+      <img
+        src={movie.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/placeholder.png'}
+        alt={movie.title}
+        className="w-full h-64 object-cover"
+      />
+      <div className="p-4 flex-1 flex flex-col justify-between">
+        <header>
+          <h2 className="text-lg font-bold mb-2" title={movie.title}>{movie.title}</h2>
+          <p className="text-sm text-gray-500">{movie.release_date ? movie.release_date.slice(0, 4) : 'N/A'}</p>
+        </header>
+        <footer className="mt-2">
+          <StarRating value={userRating} onChange={setUserRating} average={average} />
+        </footer>
+      </div>
+    </article>
+  );
+}
+
+==============================================================================================================================================================================================================================================================================
+FilterBar.jsx
+
+// src/components/FilterBar.jsx
+// FilterBar component for filtering movies by genre, year, and rating
+// Uses semantic tags and TailwindCSS for styling
+import React from 'react';
+
+/**
+ * FilterBar allows users to filter movies by genre, year, and rating.
+ * @param {Object} props
+ * @param {Array} props.genres - List of genres
+ * @param {string} props.selectedGenre - Selected genre
+ * @param {function} props.onGenreChange - Handler for genre change
+ * @param {string} props.selectedYear - Selected year
+ * @param {function} props.onYearChange - Handler for year change
+ * @param {string} props.selectedRating - Selected rating
+ * @param {function} props.onRatingChange - Handler for rating change
+ */
+export default function FilterBar({ genres, selectedGenre, onGenreChange, selectedYear, onYearChange, selectedRating, onRatingChange }) {
+  // Generate years from 1980 to current year
+  const years = Array.from({ length: new Date().getFullYear() - 1979 }, (_, i) => (1980 + i).toString());
+  const ratings = ['1', '2', '3', '4', '5'];
+
+  return (
+    <section className="flex flex-wrap gap-4 mb-6" aria-label="Filter Movies">
+      <div>
+        <label htmlFor="genre" className="block text-sm font-medium text-gray-700 mb-1">Genre</label>
+        <select
+          id="genre"
+          value={selectedGenre}
+          onChange={e => onGenreChange(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-md"
+        >
+          <option value="">All</option>
+          {genres.map(genre => (
+            <option key={genre.id} value={genre.id}>{genre.name}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+        <select
+          id="year"
+          value={selectedYear}
+          onChange={e => onYearChange(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-md"
+        >
+          <option value="">All</option>
+          {years.map(year => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label htmlFor="rating" className="block text-sm font-medium text-gray-700 mb-1">Min Rating</label>
+        <select
+          id="rating"
+          value={selectedRating}
+          onChange={e => onRatingChange(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-md"
+        >
+          <option value="">All</option>
+          {ratings.map(rating => (
+            <option key={rating} value={rating}>{rating}+</option>
+          ))}
+        </select>
+      </div>
+    </section>
+  );
+}
+
+==============================================================================================================================================================================================================================================================================
