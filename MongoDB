@@ -1,0 +1,119 @@
+Database Design
+// users collection: stores user details and their mentor
+{
+  _id: ObjectId,
+  name: String,
+  email: String,
+  mentor_id: ObjectId
+}
+
+// codekata collection: tracks problems solved by each user
+{
+  _id: ObjectId,
+  user_id: ObjectId,
+  problems_solved: Number
+}
+
+// attendance collection: records user attendance by date
+{
+  _id: ObjectId,
+  user_id: ObjectId,
+  date: ISODate,
+  status: "Present" | "Absent"
+}
+
+// topics collection: stores topics taught and their date
+{
+  _id: ObjectId,
+  topic: String,
+  date: ISODate
+}
+
+// tasks collection: tracks task submission status for each user and topic
+{
+  _id: ObjectId,
+  topic_id: ObjectId,
+  user_id: ObjectId,
+  submitted: Boolean,
+  date: ISODate
+}
+
+// company_drives collection: records company drives and students who appeared
+{
+  _id: ObjectId,
+  company: String,
+  date: ISODate,
+  students_appeared: [ObjectId] // array of user_ids
+}
+
+// mentors collection: stores mentor details and their mentees
+{
+  _id: ObjectId,
+  name: String,
+  mentees: [ObjectId] // array of user_ids
+}
+
+Queries
+// 1. Find all the topics and tasks which are taught in the month of October
+
+// Find topics taught in October (any year)
+db.topics.find({
+  $expr: { $eq: [{ $month: "$date" }, 10] }
+})
+// Find tasks given in October (any year)
+db.tasks.find({
+  $expr: { $eq: [{ $month: "$date" }, 10] }
+})
+
+// 2. Find all the company drives which appeared between 15-oct-2020 and 31-oct-2020
+
+// Find company drives in the specified date range
+db.company_drives.find({
+  date: {
+    $gte: ISODate("2020-10-15"),
+    $lte: ISODate("2020-10-31")
+  }
+})
+
+// 3. Find all the company drives and students who appeared for the placement
+
+// Find all company drives and list students who appeared for each
+db.company_drives.find(
+  { students_appeared: { $exists: true, $ne: [] } },
+  { company: 1, date: 1, students_appeared: 1 }
+)
+
+// 4. Find the number of problems solved by the user in codekata
+
+// Aggregate total problems solved by each user
+db.codekata.aggregate([
+  {
+    $group: {
+      _id: "$user_id",
+      totalProblemsSolved: { $sum: "$problems_solved" }
+    }
+  }
+])
+
+// 5. Find all the mentors who have mentee’s count more than 15
+
+// Find mentors with more than 15 mentees
+db.mentors.find({
+  $expr: { $gt: [{ $size: "$mentees" }, 15] }
+})
+
+// 6. Find the number of users who are absent and task is not submitted between 15-oct-2020 and 31-oct-2020
+
+// Step 1: Find user IDs who were absent in the date range
+const absentUsers = db.attendance.distinct("user_id", {
+  date: { $gte: ISODate("2020-10-15"), $lte: ISODate("2020-10-31") },
+  status: "Absent"
+});
+// Step 2: Find user IDs who did NOT submit tasks in the date range
+const notSubmittedUsers = db.tasks.distinct("user_id", {
+  date: { $gte: ISODate("2020-10-15"), $lte: ISODate("2020-10-31") },
+  submitted: false
+});
+// Step 3: Find intersection and count
+const count = absentUsers.filter(u => notSubmittedUsers.includes(u)).length;
+print("Number of users absent and not submitted tasks:", count);
