@@ -103,14 +103,11 @@ After running `npm run dev`, open your browser and navigate to the localhost URL
 
 ## Core Concepts
 
+
 ### State Management
 
-Uses Redux Toolkit for global state management.
-The main slice is `moviesSlice`, which manages:
-- Movie list
-- Movie details
-- Loading/error states
-- Favorites (with localStorage persistence)
+State is managed using React hooks and context where needed. Favorites are managed with a custom hook (`useFavorites`) and persisted in the browser's localStorage for a seamless user experience across sessions.
+Movie data and details are managed locally within components. Redux is not used in the current implementation.
 
 ### API Integration
 
@@ -129,17 +126,17 @@ Main routes are defined in `App.jsx`:
 Uses Tailwind CSS for utility-first styling.
 Custom colors and fonts are defined in `tailwind.config.js` and `App.css`.
 
+
 ## Key Components & Files
 
 - `src/App.jsx`: Main app component, sets up routes
 - `src/pages/SearchPage.jsx`: Displays the movie grid, search bar, and filters
 - `src/pages/DetailsPage.jsx`: Shows detailed info for a selected movie
-- `src/components/MovieCard.jsx`: Card UI for each movie
+- `src/components/MovieCard.jsx`: Card UI for each movie (accessible, optimized, with fallback images)
 - `src/components/SearchBar.jsx`: Search input for movies
 - `src/components/TypeDropdown.jsx`: Dropdown for movie type filter
 - `src/components/Pagination.jsx`: Pagination controls
-- `src/slices/moviesSlice.js`: Redux slice for movies and favorites
-- `src/store/index.js`: Redux store configuration
+- `src/hooks/useFavorites.js`: Custom React hook for managing favorites with localStorage
 - `src/services/omdbApi.js`: API logic
 
 ## Extending the App
@@ -153,7 +150,13 @@ Custom colors and fonts are defined in `tailwind.config.js` and `App.css`.
 
 - React
 - React Hooks
-- Redux Toolkit
+  
+  
+## Recent Improvements
+
+- **Favorites Persistence:** Favorites are now managed with a custom React hook and stored in localStorage, ensuring persistence across browser sessions.
+- **Simplified State Management:** Removed Redux in favor of React hooks for a simpler, more maintainable codebase.
+- **Accessibility & Performance:** Improved accessibility in components like `MovieCard` (keyboard navigation, alt text, fallback images) and optimized rendering for better performance.
 - Tailwind CSS for styling
 - OMDb API for movie data
 - Vite (for fast development and build)
@@ -272,45 +275,69 @@ SearchPage.jsx
 // src/pages/SearchPage.jsx
 // Main search page for the Movie Search App.
 // Follows W3C code documentation best practices.
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
 import MovieCard from '../components/MovieCard';
 import Pagination from '../components/Pagination';
 import TypeDropdown from '../components/TypeDropdown';
+import { fetchMovies } from '../services/omdbApi';
+import useFavorites from '../hooks/useFavorites';
 
 /**
  * SearchPage component for searching and displaying movies.
  */
 function SearchPage() {
-  // Placeholder state and handlers for demonstration
   const [query, setQuery] = useState('');
   const [type, setType] = useState('');
-  const [movies, setMovies] = useState([]); // To be fetched from API
+  const [movies, setMovies] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [favorites, setFavorites] = useState([]);
+  const [error, setError] = useState('');
+  const [favorites, toggleFavorite] = useFavorites();
+  const navigate = useNavigate();
 
-  // Placeholder handlers
-  const handleSearch = (e) => {
+  useEffect(() => {
+    if (!query) {
+      setMovies([]);
+      setTotalPages(1);
+      setError('');
+      return;
+    }
+    setError('');
+    fetchMovies(query, type, page)
+      .then(data => {
+        setMovies(data.Search || []);
+        setTotalPages(Math.ceil(Number(data.totalResults || 1) / 10));
+      })
+      .catch(e => {
+        setMovies([]);
+        setTotalPages(1);
+        setError(e.message);
+      });
+  }, [query, type, page]);
+
+  const handleSearch = e => {
     e.preventDefault();
-    // TODO: Fetch movies from OMDB API
+    setPage(1);
+    setQuery(query.trim());
   };
-  const handleTypeChange = (e) => setType(e.target.value);
-  const handleSelectMovie = (imdbID) => {
-    // TODO: Navigate to details page
+
+  const handleTypeChange = e => {
+    setType(e.target.value);
+    setPage(1);
   };
-  const handleFavorite = (movie) => {
-    // TODO: Add/remove favorite
-  };
-  const handlePageChange = (newPage) => setPage(newPage);
+
+  const handleSelectMovie = imdbID => navigate(`/movie/${imdbID}`);
 
   return (
     <main className="max-w-5xl mx-auto p-4">
       <h1 className="text-3xl font-bold mb-4 text-center">Movie Search</h1>
       <TypeDropdown value={type} onChange={handleTypeChange} />
       <SearchBar value={query} onChange={e => setQuery(e.target.value)} onSubmit={handleSearch} />
+      {error && <p className="text-red-500 text-center">{error}</p>}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {movies.length === 0 ? (
+        {movies.length === 0 && !error ? (
           <p className="col-span-full text-center text-gray-500">No results found.</p>
         ) : (
           movies.map(movie => (
@@ -318,13 +345,13 @@ function SearchPage() {
               key={movie.imdbID}
               movie={movie}
               onSelect={handleSelectMovie}
-              onFavorite={handleFavorite}
+              onFavorite={toggleFavorite}
               isFavorite={favorites.some(fav => fav.imdbID === movie.imdbID)}
             />
           ))
         )}
       </section>
-      <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
+      <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
     </main>
   );
 }
@@ -361,14 +388,27 @@ useFavorites.js
 // src/hooks/useFavorites.js
 // Custom React hook for managing favorite movies.
 // Follows W3C code documentation best practices.
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+const STORAGE_KEY = 'favorites';
 
 /**
  * useFavorites custom hook for managing favorite movies.
  * @returns {[Array, Function]} - [favorites, toggleFavorite]
  */
 export default function useFavorites() {
-  const [favorites, setFavorites] = useState([]);
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
+  }, [favorites]);
 
   /**
    * Toggle a movie as favorite.
@@ -377,11 +417,9 @@ export default function useFavorites() {
   function toggleFavorite(movie) {
     setFavorites(prev => {
       const exists = prev.some(fav => fav.imdbID === movie.imdbID);
-      if (exists) {
-        return prev.filter(fav => fav.imdbID !== movie.imdbID);
-      } else {
-        return [...prev, movie];
-      }
+      return exists
+        ? prev.filter(fav => fav.imdbID !== movie.imdbID)
+        : [...prev, movie];
     });
   }
 
@@ -524,7 +562,7 @@ function MovieCard({ movie, onSelect, onFavorite, isFavorite }) {
   return (
     <article className="bg-white rounded shadow p-2 flex flex-col items-center hover:shadow-lg transition-shadow" tabIndex={0} aria-label={movie.Title}>
       <img
-        src={movie.Poster !== 'N/A' ? movie.Poster : '/placeholder.png'}
+        src={movie.Poster && movie.Poster !== 'N/A' ? movie.Poster : 'https://via.placeholder.com/128x192?text=No+Image'}
         alt={movie.Title}
         className="w-32 h-48 object-cover rounded mb-2"
         loading="lazy"
