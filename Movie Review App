@@ -195,7 +195,7 @@ MovieList.jsx
 // src/pages/MovieList.jsx
 // MovieList page displays a grid of movies using MovieCard
 // Uses semantic tags and TailwindCSS for layout
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useFetchMovies } from '../hooks/useFetchMovies';
 import { useFetchGenres } from '../hooks/useFetchGenres';
 import MovieCard from '../components/MovieCard';
@@ -220,25 +220,20 @@ export default function MovieList() {
   const { genres } = useFetchGenres();
 
   // Fetch movies with search query
-  const { movies, loading, error } = useFetchMovies(search);
-
-  // Filter movies by genre, year, and rating with error handling
-  let filteredMovies = [];
-  try {
-    filteredMovies = movies.filter((movie) => {
-      const matchesGenre = selectedGenre ? movie.genre_ids?.includes(Number(selectedGenre)) : true;
-      const matchesYear = selectedYear ? (movie.release_date && movie.release_date.startsWith(selectedYear)) : true;
-      const matchesRating = selectedRating ? (movie.vote_average && Math.round(movie.vote_average / 2) >= Number(selectedRating)) : true;
-      return matchesGenre && matchesYear && matchesRating;
-    });
-  } catch (err) {
-    filteredMovies = [];
-    // Log error for debugging
-    console.error('Error filtering movies:', err);
-  }
+  const { movies = [], loading, error } = useFetchMovies(search);
 
   // Fetch details for selected movie
   const { movie: selectedMovie, loading: loadingDetails } = useFetchMovieDetails(selectedMovieId);
+
+  // Filter movies by genre, year, and rating with error handling
+  const filteredMovies = useMemo(() => {
+    return movies.filter((movie) => {
+      const matchesGenre = selectedGenre ? movie.genre_ids?.includes(Number(selectedGenre)) : true;
+      const matchesYear = selectedYear ? movie.release_date?.startsWith(selectedYear) : true;
+      const matchesRating = selectedRating ? Math.round((movie.vote_average || 0) / 2) >= Number(selectedRating) : true;
+      return matchesGenre && matchesYear && matchesRating;
+    });
+  }, [movies, selectedGenre, selectedYear, selectedRating]);
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -456,7 +451,7 @@ StarRating.jsx
 // src/components/StarRating.jsx
 // StarRating component for displaying and setting user ratings
 // Uses semantic tags and TailwindCSS for styling
-import React from 'react';
+import React, { useCallback } from 'react';
 
 /**
  * StarRating allows users to rate a movie and displays the average rating.
@@ -466,7 +461,8 @@ import React from 'react';
  * @param {function} props.onChange - Handler for rating change
  * @param {number} [props.average] - Average rating (optional)
  */
-export default function StarRating({ value = 0, onChange, average }) {
+function StarRating({ value = 0, onChange, average }) {
+  const handleClick = useCallback((star) => () => onChange(star), [onChange]);
   // Render 5 stars, highlight up to the current value
   return (
     <div className="flex items-center gap-2" aria-label="Star rating">
@@ -475,7 +471,7 @@ export default function StarRating({ value = 0, onChange, average }) {
           key={star}
           type="button"
           className={`text-2xl focus:outline-none ${value >= star ? 'text-yellow-400' : 'text-gray-300'}`}
-          onClick={() => onChange(star)}
+          onClick={handleClick(star)}
           aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
         >
           ★
@@ -487,6 +483,8 @@ export default function StarRating({ value = 0, onChange, average }) {
     </div>
   );
 }
+
+export default React.memo(StarRating);
 
 ==============================================================================================================================================================================================================================================================================
 SearchBar.jsx
@@ -614,40 +612,35 @@ MovieCard.jsx
 // src/components/MovieCard.jsx
 // MovieCard component displays a single movie's basic info
 // Uses semantic tags and TailwindCSS for styling
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import StarRating from './StarRating';
 
 /**
- * MovieCard displays a movie's poster, title, year, and genre.
- * Handles user rating with robust error handling and W3C code documentation best practices.
+ * Custom hook for persisting a value in localStorage.
+ */
+function useLocalStorage(key, initialValue) {
+  const [value, setValue] = useState(() => {
+    const saved = localStorage.getItem(key);
+    return saved !== null ? Number(saved) : initialValue;
+  });
+
+  useEffect(() => {
+    if (value > 0) localStorage.setItem(key, value);
+  }, [key, value]);
+
+  return [value, setValue];
+}
+
+/**
+ * MovieCard displays a movie's poster, title, year, and rating.
  * @param {Object} props
  * @param {Object} props.movie - Movie object from TMDB API
  */
 export default function MovieCard({ movie }) {
-  // User rating state, persisted in localStorage
-  const [userRating, setUserRating] = useState(() => {
-    try {
-      const saved = localStorage.getItem(`rating_${movie.id}`);
-      return saved ? Number(saved) : 0;
-    } catch (err) {
-      // Log error for debugging
-      console.error('Error reading rating from localStorage:', err);
-      return 0;
-    }
-  });
-
-  useEffect(() => {
-    try {
-      if (userRating > 0) {
-        localStorage.setItem(`rating_${movie.id}`, userRating);
-      }
-    } catch (err) {
-      // Log error for debugging
-      console.error('Error saving rating to localStorage:', err);
-    }
-  }, [userRating, movie.id]);
-
-  // TMDB vote_average is out of 10, convert to 1-5 scale
+  const [userRating, setUserRating] = useLocalStorage(`rating_${movie.id}`, 0);
   const average = movie.vote_average ? movie.vote_average / 2 : undefined;
+
+  const handleRating = useCallback((star) => setUserRating(star), [setUserRating]);
 
   return (
     <article className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col h-full" aria-label={movie.title}>
@@ -659,10 +652,10 @@ export default function MovieCard({ movie }) {
       <div className="p-4 flex-1 flex flex-col justify-between">
         <header>
           <h2 className="text-lg font-bold mb-2" title={movie.title}>{movie.title}</h2>
-          <p className="text-sm text-gray-500">{movie.release_date ? movie.release_date.slice(0, 4) : 'N/A'}</p>
+          <p className="text-sm text-gray-500">{movie.release_date?.slice(0, 4) || 'N/A'}</p>
         </header>
         <footer className="mt-2">
-          <StarRating value={userRating} onChange={setUserRating} average={average} />
+          <StarRating value={userRating} onChange={handleRating} average={average} />
         </footer>
       </div>
     </article>
