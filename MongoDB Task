@@ -1,0 +1,226 @@
+1. Collections & Sample Data
+
+users
+db.users.insertMany([
+  { _id: 1, name: "Alice", email: "alice@example.com", mentor_id: 101 },
+  { _id: 2, name: "Bob", email: "bob@example.com", mentor_id: 102 },
+  { _id: 3, name: "Charlie", email: "charlie@example.com", mentor_id: 101 },
+  { _id: 4, name: "David", email: "david@example.com", mentor_id: 102 },
+  { _id: 5, name: "Eva", email: "eva@example.com", mentor_id: 101 },
+  { _id: 6, name: "Frank", email: "frank@example.com", mentor_id: 103 },
+  { _id: 7, name: "Grace", email: "grace@example.com", mentor_id: 101 },
+  { _id: 8, name: "Hannah", email: "hannah@example.com", mentor_id: 102 },
+  { _id: 9, name: "Ian", email: "ian@example.com", mentor_id: 103 },
+  { _id: 10, name: "Jane", email: "jane@example.com", mentor_id: 101 },
+  { _id: 11, name: "Kyle", email: "kyle@example.com", mentor_id: 102 },
+  { _id: 12, name: "Liam", email: "liam@example.com", mentor_id: 103 },
+  { _id: 13, name: "Mia", email: "mia@example.com", mentor_id: 101 },
+  { _id: 14, name: "Nina", email: "nina@example.com", mentor_id: 102 },
+  { _id: 15, name: "Oscar", email: "oscar@example.com", mentor_id: 103 },
+  { _id: 16, name: "Paul", email: "paul@example.com", mentor_id: 101 },
+  { _id: 17, name: "Quinn", email: "quinn@example.com", mentor_id: 102 },
+  { _id: 18, name: "Rose", email: "rose@example.com", mentor_id: 103 },
+  { _id: 19, name: "Sam", email: "sam@example.com", mentor_id: 101 },
+  { _id: 20, name: "Tina", email: "tina@example.com", mentor_id: 102 }
+])
+
+codekata
+db.codekata.insertMany([
+  { user_id: 1, problems_solved: 120 },
+  { user_id: 2, problems_solved: 95 },
+  { user_id: 3, problems_solved: 110 },
+  { user_id: 4, problems_solved: 80 },
+  { user_id: 5, problems_solved: 130 },
+  { user_id: 6, problems_solved: 70 },
+  { user_id: 7, problems_solved: 105 },
+  { user_id: 8, problems_solved: 90 },
+  { user_id: 9, problems_solved: 115 },
+  { user_id: 10, problems_solved: 100 },
+  { user_id: 11, problems_solved: 85 },
+  { user_id: 12, problems_solved: 75 },
+  { user_id: 13, problems_solved: 125 },
+  { user_id: 14, problems_solved: 60 },
+  { user_id: 15, problems_solved: 95 },
+  { user_id: 16, problems_solved: 110 },
+  { user_id: 17, problems_solved: 80 },
+  { user_id: 18, problems_solved: 120 },
+  { user_id: 19, problems_solved: 105 },
+  { user_id: 20, problems_solved: 100 }
+])
+
+attendance
+db.attendance.insertMany([
+  { user_id: 1, date: ISODate("2020-10-16"), status: "present" },
+  { user_id: 2, date: ISODate("2020-10-16"), status: "absent" },
+  { user_id: 3, date: ISODate("2020-10-17"), status: "present" },
+  { user_id: 4, date: ISODate("2020-10-17"), status: "absent" },
+  { user_id: 5, date: ISODate("2020-10-18"), status: "present" },
+  { user_id: 6, date: ISODate("2020-10-18"), status: "absent" },
+  { user_id: 7, date: ISODate("2020-10-19"), status: "present" },
+  { user_id: 8, date: ISODate("2020-10-19"), status: "absent" },
+  { user_id: 9, date: ISODate("2020-10-20"), status: "present" },
+  { user_id: 10, date: ISODate("2020-10-20"), status: "absent" },
+  { user_id: 11, date: ISODate("2020-10-21"), status: "present" },
+  { user_id: 12, date: ISODate("2020-10-21"), status: "absent" },
+  { user_id: 13, date: ISODate("2020-10-22"), status: "present" },
+  { user_id: 14, date: ISODate("2020-10-22"), status: "absent" },
+  { user_id: 15, date: ISODate("2020-10-23"), status: "present" },
+  { user_id: 16, date: ISODate("2020-10-23"), status: "absent" },
+  { user_id: 17, date: ISODate("2020-10-24"), status: "present" },
+  { user_id: 18, date: ISODate("2020-10-24"), status: "absent" },
+  { user_id: 19, date: ISODate("2020-10-25"), status: "present" },
+  { user_id: 20, date: ISODate("2020-10-25"), status: "absent" }
+])
+
+topics
+db.topics.insertMany([
+  { topic_id: 201, name: "MongoDB Basics", date: ISODate("2020-10-05") },
+  { topic_id: 202, name: "Aggregation", date: ISODate("2020-10-20") },
+  { topic_id: 203, name: "Indexing", date: ISODate("2020-09-25") },
+  { topic_id: 204, name: "Schema Design", date: ISODate("2020-10-10") },
+  { topic_id: 205, name: "Replication", date: ISODate("2020-10-15") },
+  { topic_id: 206, name: "Sharding", date: ISODate("2020-10-25") },
+  { topic_id: 207, name: "Transactions", date: ISODate("2020-10-30") },
+  { topic_id: 208, name: "Security", date: ISODate("2020-09-30") },
+  { topic_id: 209, name: "Backup", date: ISODate("2020-10-12") },
+  { topic_id: 210, name: "Restore", date: ISODate("2020-10-18") },
+  { topic_id: 211, name: "Performance", date: ISODate("2020-10-22") },
+  { topic_id: 212, name: "Monitoring", date: ISODate("2020-10-28") },
+  { topic_id: 213, name: "Cloud Atlas", date: ISODate("2020-10-08") },
+  { topic_id: 214, name: "Data Modeling", date: ISODate("2020-10-14") },
+  { topic_id: 215, name: "Mongoose", date: ISODate("2020-10-16") },
+  { topic_id: 216, name: "Express", date: ISODate("2020-10-19") },
+  { topic_id: 217, name: "Node.js", date: ISODate("2020-10-21") },
+  { topic_id: 218, name: "API Design", date: ISODate("2020-10-23") },
+  { topic_id: 219, name: "Testing", date: ISODate("2020-10-27") },
+  { topic_id: 220, name: "Deployment", date: ISODate("2020-10-29") }
+])
+
+tasks
+db.tasks.insertMany([
+  { task_id: 301, topic_id: 201, name: "CRUD Operations", date: ISODate("2020-10-06"), user_id: 1, submitted: true },
+  { task_id: 302, topic_id: 202, name: "Aggregation Pipeline", date: ISODate("2020-10-21"), user_id: 2, submitted: false },
+  { task_id: 303, topic_id: 204, name: "Design Schemas", date: ISODate("2020-10-11"), user_id: 3, submitted: true },
+  { task_id: 304, topic_id: 205, name: "Replica Set Setup", date: ISODate("2020-10-16"), user_id: 4, submitted: false },
+  { task_id: 305, topic_id: 206, name: "Sharding Demo", date: ISODate("2020-10-26"), user_id: 5, submitted: true },
+  { task_id: 306, topic_id: 207, name: "Transaction Example", date: ISODate("2020-10-31"), user_id: 6, submitted: false },
+  { task_id: 307, topic_id: 209, name: "Backup Script", date: ISODate("2020-10-13"), user_id: 7, submitted: true },
+  { task_id: 308, topic_id: 210, name: "Restore Script", date: ISODate("2020-10-19"), user_id: 8, submitted: false },
+  { task_id: 309, topic_id: 211, name: "Performance Test", date: ISODate("2020-10-23"), user_id: 9, submitted: true },
+  { task_id: 310, topic_id: 212, name: "Monitoring Setup", date: ISODate("2020-10-29"), user_id: 10, submitted: false },
+  { task_id: 311, topic_id: 213, name: "Atlas Setup", date: ISODate("2020-10-09"), user_id: 11, submitted: true },
+  { task_id: 312, topic_id: 214, name: "Model Data", date: ISODate("2020-10-15"), user_id: 12, submitted: false },
+  { task_id: 313, topic_id: 215, name: "Mongoose Models", date: ISODate("2020-10-17"), user_id: 13, submitted: true },
+  { task_id: 314, topic_id: 216, name: "Express API", date: ISODate("2020-10-20"), user_id: 14, submitted: false },
+  { task_id: 315, topic_id: 217, name: "Node.js Server", date: ISODate("2020-10-22"), user_id: 15, submitted: true },
+  { task_id: 316, topic_id: 218, name: "API Endpoints", date: ISODate("2020-10-24"), user_id: 16, submitted: false },
+  { task_id: 317, topic_id: 219, name: "Test Cases", date: ISODate("2020-10-28"), user_id: 17, submitted: true },
+  { task_id: 318, topic_id: 220, name: "Deploy App", date: ISODate("2020-10-30"), user_id: 18, submitted: false },
+  { task_id: 319, topic_id: 202, name: "Aggregation Practice", date: ISODate("2020-10-20"), user_id: 19, submitted: true },
+  { task_id: 320, topic_id: 201, name: "CRUD Practice", date: ISODate("2020-10-07"), user_id: 20, submitted: false }
+])
+
+company_drives
+db.company_drives.insertMany([
+  { drive_id: 401, company: "Google", date: ISODate("2020-10-18"), students: [1, 2, 3] },
+  { drive_id: 402, company: "Amazon", date: ISODate("2020-10-28"), students: [2, 4, 5] },
+  { drive_id: 403, company: "Facebook", date: ISODate("2020-10-16"), students: [6, 7, 8] },
+  { drive_id: 404, company: "Microsoft", date: ISODate("2020-10-20"), students: [9, 10, 11] },
+  { drive_id: 405, company: "Apple", date: ISODate("2020-10-22"), students: [12, 13, 14] },
+  { drive_id: 406, company: "Netflix", date: ISODate("2020-10-24"), students: [15, 16, 17] },
+  { drive_id: 407, company: "Uber", date: ISODate("2020-10-26"), students: [18, 19, 20] },
+  { drive_id: 408, company: "Airbnb", date: ISODate("2020-10-30"), students: [1, 4, 7] },
+  { drive_id: 409, company: "Tesla", date: ISODate("2020-10-15"), students: [2, 5, 8] },
+  { drive_id: 410, company: "Adobe", date: ISODate("2020-10-17"), students: [3, 6, 9] },
+  { drive_id: 411, company: "Salesforce", date: ISODate("2020-10-19"), students: [10, 13, 16] },
+  { drive_id: 412, company: "Oracle", date: ISODate("2020-10-21"), students: [11, 14, 17] },
+  { drive_id: 413, company: "Intel", date: ISODate("2020-10-23"), students: [12, 15, 18] },
+  { drive_id: 414, company: "Cisco", date: ISODate("2020-10-25"), students: [13, 16, 19] },
+  { drive_id: 415, company: "HP", date: ISODate("2020-10-27"), students: [14, 17, 20] },
+  { drive_id: 416, company: "Dell", date: ISODate("2020-10-29"), students: [1, 5, 9] },
+  { drive_id: 417, company: "Samsung", date: ISODate("2020-10-31"), students: [2, 6, 10] },
+  { drive_id: 418, company: "LG", date: ISODate("2020-10-13"), students: [3, 7, 11] },
+  { drive_id: 419, company: "Sony", date: ISODate("2020-10-14"), students: [4, 8, 12] },
+  { drive_id: 420, company: "Panasonic", date: ISODate("2020-10-12"), students: [5, 9, 13] }
+])
+
+mentors
+db.mentors.insertMany([
+  { mentor_id: 101, name: "Mr. Smith", mentees: [1, 3, 5, 7, 10, 13, 16, 19] },
+  { mentor_id: 102, name: "Ms. Jane", mentees: [2, 4, 8, 11, 14, 17, 20] },
+  { mentor_id: 103, name: "Dr. Brown", mentees: [6, 9, 12, 15, 18] },
+  { mentor_id: 104, name: "Mrs. Green", mentees: [21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36] },
+  { mentor_id: 105, name: "Mr. Black", mentees: [37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53] }
+])
+=========================================================================================================================
+2. Queries
+
+1. Find all the topics and tasks which are taught in October
+// Find topics taught in October
+db.topics.find({
+  date: { $gte: ISODate("2020-10-01"), $lte: ISODate("2020-10-31") }
+})
+
+// Find tasks given in October
+db.tasks.find({
+  date: { $gte: ISODate("2020-10-01"), $lte: ISODate("2020-10-31") }
+})
+
+// These queries fetch all topics and tasks with dates in October 2020.
+
+=========================================================================================================================
+2. Find all the company drives which appeared between 15-oct-2020 and 31-oct-2020
+db.company_drives.find({
+  date: { $gte: ISODate("2020-10-15"), $lte: ISODate("2020-10-31") }
+})
+// This query fetches company drives held between 15th and 31st October 2020.
+=========================================================================================================================
+3. Find all the company drives and students who appeared for the placement
+db.company_drives.aggregate([
+  {
+    $project: {
+      company: 1,
+      date: 1,
+      students: 1
+    }
+  }
+])
+// This aggregation lists each company drive and the students who appeared for it.
+=========================================================================================================================
+4. Find the number of problems solved by the user in codekata
+db.codekata.find({}, { user_id: 1, problems_solved: 1 })
+// This query returns each user’s ID and the number of problems they solved in CodeKata.
+=========================================================================================================================
+5. Find all the mentors with mentee count more than 15
+db.mentors.find({
+  $expr: { $gt: [ { $size: "$mentees" }, 15 ] }
+})
+// This query finds mentors who have more than 15 mentees.
+=========================================================================================================================
+6. Find the number of users who are absent and task is not submitted between 15-oct-2020 and 31-oct-2020
+db.attendance.aggregate([
+  {
+    $match: {
+      status: "absent",
+      date: { $gte: ISODate("2020-10-15"), $lte: ISODate("2020-10-31") }
+    }
+  },
+  {
+    $lookup: {
+      from: "tasks",
+      let: { userId: "$user_id", attDate: "$date" },
+      pipeline: [
+        { $match: { $expr: { $and: [
+          { $eq: ["$user_id", "$$userId"] },
+          { $eq: ["$date", "$$attDate"] }
+        ] } } }
+      ],
+      as: "task_submitted"
+    }
+  },
+  { $match: { "task_submitted": { $size: 0 } } },
+  { $count: "absent_and_not_submitted" }
+])
+// This aggregation counts users who were absent and did not submit a task on the same day between 15th and 31st October 2020.
+=========================================================================================================================
+
