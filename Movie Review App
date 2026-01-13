@@ -320,22 +320,18 @@ export function useFetchGenres() {
       setError(null);
       try {
         const url = `${BASE_URL}/genre/movie/list?api_key=${API_KEY}`;
-        let response;
-        try {
-          response = await fetch(url);
-        } catch (networkError) {
-          throw new Error('Network error while fetching genres.');
-        }
+        const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch genres.');
-        let data;
-        try {
-          data = await response.json();
-        } catch (parseError) {
-          throw new Error('Error parsing genre data.');
-        }
+        const data = await response.json();
         setGenres(Array.isArray(data.genres) ? data.genres : []);
       } catch (err) {
-        setError(err.message || 'Unknown error occurred while fetching genres.');
+        if (err.name === 'TypeError') {
+          setError('Network error while fetching genres.');
+        } else if (err instanceof SyntaxError) {
+          setError('Error parsing genre data.');
+        } else {
+          setError(err.message || 'Unknown error occurred while fetching genres.');
+        }
       } finally {
         setLoading(false);
       }
@@ -376,22 +372,18 @@ export function useFetchMovieDetails(movieId) {
       setError(null);
       try {
         const url = `${BASE_URL}/movie/${movieId}?api_key=${API_KEY}&append_to_response=credits`;
-        let response;
-        try {
-          response = await fetch(url);
-        } catch (networkError) {
-          throw new Error('Network error while fetching movie details.');
-        }
+        const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch movie details.');
-        let data;
-        try {
-          data = await response.json();
-        } catch (parseError) {
-          throw new Error('Error parsing movie details data.');
-        }
+        const data = await response.json();
         setMovie(data);
       } catch (err) {
-        setError(err.message || 'Unknown error occurred while fetching movie details.');
+        if (err.name === 'TypeError') {
+          setError('Network error while fetching movie details.');
+        } else if (err instanceof SyntaxError) {
+          setError('Error parsing movie details data.');
+        } else {
+          setError(err.message || 'Unknown error occurred while fetching movie details.');
+        }
       } finally {
         setLoading(false);
       }
@@ -436,22 +428,18 @@ export function useFetchMovies(query = '') {
         } else {
           url = `${BASE_URL}/movie/popular?api_key=${API_KEY}`;
         }
-        let response;
-        try {
-          response = await fetch(url);
-        } catch (networkError) {
-          throw new Error('Network error while fetching movies.');
-        }
+        const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch movies.');
-        let data;
-        try {
-          data = await response.json();
-        } catch (parseError) {
-          throw new Error('Error parsing movie data.');
-        }
+        const data = await response.json();
         setMovies(Array.isArray(data.results) ? data.results : []);
       } catch (err) {
-        setError(err.message || 'Unknown error occurred while fetching movies.');
+        if (err.name === 'TypeError') {
+          setError('Network error while fetching movies.');
+        } else if (err instanceof SyntaxError) {
+          setError('Error parsing movie data.');
+        } else {
+          setError(err.message || 'Unknown error occurred while fetching movies.');
+        }
       } finally {
         setLoading(false);
       }
