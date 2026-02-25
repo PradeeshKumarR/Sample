@@ -1,0 +1,386 @@
+# User Authentication and Authorization API
+
+
+This project implements user authentication and authorization using Bearer tokens (JWT) in a Node.js application with Express.js and MongoDB (Mongoose). It follows the MVC pattern.
+
+**Note:** This project uses ECMAScript modules (ESM) with `import`/`export` syntax. Ensure you are using **Node.js v16 or higher** for full compatibility.
+
+## Features
+- User registration with hashed passwords
+- User login with JWT token generation
+- Protected route to get user info
+- JWT-based authentication middleware
+- Clean, modular code structure
+
+## Tech Stack
+- Node.js
+- Express.js
+- MongoDB & Mongoose
+- JWT (jsonwebtoken)
+- bcryptjs
+bcryptjs
+
+## Project Structure
+
+```
+UserAuthentication/
+├── app.js
+├── package.json
+├── README.md
+├── .env         # (not committed)
+├── controllers/
+│   ├── authController.js
+│   └── userController.js
+├── middleware/
+│   └── authMiddleware.js
+├── models/
+│   └── User.js
+├── routes/
+│   ├── authRoutes.js
+│   └── userRoutes.js
+└── views/
+```
+
+
+## Setup
+1. Clone the repo and install dependencies:
+   ```bash
+   npm install
+   ```
+2. Create a `.env` file in the root with:
+   ```env
+   MONGO_URI=your_mongodb_connection_string
+   JWT_SECRET=your_jwt_secret
+   PORT=5000
+   ```
+3. Start the server:
+   ```bash
+   node app.js
+   ```
+
+## ES Module Usage
+- All source files use `import`/`export` syntax instead of `require`/`module.exports`.
+- The `package.json` includes `"type": "module"`.
+- Example import:
+  ```js
+  import express from 'express';
+  import userRoutes from './routes/userRoutes.js';
+  ```
+
+
+## API Endpoints
+
+### Register
+- **POST** `/api/auth/register`
+- **Body:** `{ "username": "string", "email": "string", "password": "string" }`
+- **Response:** `{ "message": "User registered successfully." }`
+
+### Login
+- **POST** `/api/auth/login`
+- **Body:** `{ "email": "string", "password": "string" }`
+- **Response:** `{ "token": "jwt_token" }`
+
+### Get User Info (Protected)
+- **GET** `/api/user/me`
+- **Headers:** `Authorization: Bearer <token>`
+- **Response:** `{ "_id": "...", "username": "...", "email": "...", ... }`
+
+## API Documentation
+- Import the included Postman collection for sample requests and responses.
+
+## License
+MIT
+==================================================================================================================================================================================================================================
+authController.js
+
+
+// Import User model, JWT, and bcrypt
+import User from '../models/User.js';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+
+/**
+ * Register a new user
+ * @route POST /api/auth/register
+ * @access Public
+ */
+export const register = async (req, res) => {
+    try {
+        // Extract user input from request body
+        const { username, email, password } = req.body;
+        // Validate required fields
+        if (!username || !email || !password) {
+            return res.status(400).json({ message: 'All fields are required.' });
+        }
+        // Check if user already exists (by email or username)
+        const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+        if (existingUser) {
+            return res.status(400).json({ message: 'User already exists.' });
+        }
+        // Create and save new user (password is hashed by model)
+        const user = new User({ username, email, password });
+        await user.save();
+        // Respond with success message
+        res.status(201).json({ message: 'User registered successfully.' });
+    } catch (err) {
+        // Handle server errors
+        res.status(500).json({ message: 'Server error.' });
+    }
+};
+
+/**
+ * Login a user and return JWT
+ * @route POST /api/auth/login
+ * @access Public
+ */
+export const login = async (req, res) => {
+    try {
+        // Extract login credentials
+        const { email, password } = req.body;
+        // Validate required fields
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Email and password are required.' });
+        }
+        // Find user by email
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid credentials.' });
+        }
+        // Compare provided password with hashed password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Invalid credentials.' });
+        }
+        // Generate JWT token with user info
+        const token = jwt.sign(
+            { userId: user._id, username: user.username, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+        // Respond with JWT token
+        res.json({ token });
+    } catch (err) {
+        // Handle server errors
+        res.status(500).json({ message: 'Server error.' });
+    }
+};
+
+
+==================================================================================================================================================================================================================================
+userController.js
+
+
+// Import User model
+import User from '../models/User.js';
+
+/**
+ * Get current user's information (protected route)
+ * @route GET /api/user/me
+ * @access Private (requires JWT)
+ */
+export const getMe = async (req, res) => {
+    try {
+        // Find user by ID from JWT payload, exclude password
+        const user = await User.findById(req.user.userId).select('-password');
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+        // Respond with user info
+        res.json(user);
+    } catch (err) {
+        // Handle server errors
+        res.status(500).json({ message: 'Server error.' });
+    }
+};
+
+
+==================================================================================================================================================================================================================================
+authMiddleware.js
+
+
+// Import JWT for token verification
+import jwt from 'jsonwebtoken';
+
+
+/**
+ * Middleware to verify JWT token in Authorization header
+ * Attaches decoded user info to req.user if valid
+ */
+const authMiddleware = (req, res, next) => {
+    // Get Authorization header
+    const authHeader = req.headers['authorization'];
+    // Check for Bearer token
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'No token provided.' });
+    }
+    // Extract token from header
+    const token = authHeader.split(' ')[1];
+    try {
+        // Verify token and decode payload
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (err) {
+        // Handle invalid or expired token
+        return res.status(401).json({ message: 'Invalid or expired token.' });
+    }
+};
+export default authMiddleware;
+
+==================================================================================================================================================================================================================================
+User.js
+
+
+// Import Mongoose for MongoDB object modeling
+import mongoose from 'mongoose';
+// Import bcrypt for password hashing
+import bcrypt from 'bcryptjs';
+
+
+// Define the User schema with fields and validation
+const userSchema = new mongoose.Schema({
+    username: {
+        type: String,
+        required: true,
+        unique: true // Must be unique
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true // Must be unique
+    },
+    password: {
+        type: String,
+        required: true // Hashed password
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now // Timestamp
+    }
+});
+
+
+// Pre-save hook to hash password before saving to DB
+userSchema.pre('save', async function(next) {
+    // Only hash if password is new or modified
+    if (!this.isModified('password')) return next();
+    this.password = await bcrypt.hash(this.password, 10);
+    next();
+});
+
+
+// Create and export the User model
+const User = mongoose.model('User', userSchema);
+export default User;
+
+
+==================================================================================================================================================================================================================================
+authRoutes.js
+
+
+// Import Express and authentication controllers
+import express from 'express';
+import { register, login } from '../controllers/authController.js';
+
+// Create Express router instance
+const router = express.Router();
+
+// Registration route
+
+
+// Registration route
+// @route POST /api/auth/register
+// @desc Register a new user
+// @access Public
+router.post('/register', register);
+
+// Login route
+// @route POST /api/auth/login
+// @desc Login user and return JWT
+// @access Public
+router.post('/login', login);
+
+
+// Export the router
+export default router;
+
+==================================================================================================================================================================================================================================
+userRoutes.js
+
+
+// Import Express, user controller, and auth middleware
+import express from 'express';
+import { getMe } from '../controllers/userController.js';
+import authMiddleware from '../middleware/authMiddleware.js';
+
+// Create Express router instance
+const router = express.Router();
+
+
+// Protected route to get current user info
+// @route GET /api/user/me
+// @desc Get current user's info (requires JWT)
+// @access Private
+router.get('/me', authMiddleware, getMe);
+
+
+// Export the router
+export default router;
+
+
+==================================================================================================================================================================================================================================
+.env
+
+MONGO_URI=
+JWT_SECRET=
+PORT=5000
+
+==================================================================================================================================================================================================================================
+app.js
+
+
+
+// Entry point for the Express app
+// Import required modules
+import express from 'express'; // Express framework
+import mongoose from 'mongoose'; // MongoDB ODM
+import bodyParser from 'body-parser'; // Middleware to parse JSON bodies
+import authRoutes from './routes/authRoutes.js'; // Authentication routes
+import userRoutes from './routes/userRoutes.js'; // User info routes
+import dotenv from 'dotenv'; // For environment variables
+
+// Load environment variables from .env file
+dotenv.config();
+
+
+// Initialize Express app
+const app = express();
+
+
+// Middleware to parse incoming JSON requests
+app.use(bodyParser.json());
+
+
+// Mount authentication and user routes
+app.use('/api/auth', authRoutes); // Handles /register and /login
+app.use('/api/user', userRoutes); // Handles /me (protected)
+
+
+// Connect to MongoDB using Mongoose
+mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => {
+    console.log('MongoDB connected');
+}).catch((err) => {
+    console.error('MongoDB connection error:', err);
+});
+
+
+// Start the server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
+
+==================================================================================================================================================================================================================================
