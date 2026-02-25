@@ -1,0 +1,378 @@
+# Recipes CRUD App
+
+A simple CRUD application for managing recipes using Node.js, Express.js, and MongoDB (Mongoose). Follows the MVC pattern and provides a RESTful API.
+
+## Features
+- Create, Read, Update, Delete recipes
+- MongoDB integration with Mongoose
+- MVC architecture
+- API documentation with Postman
+- Error handling and validation
+
+## Tech Stack
+- Node.js
+- Express.js
+- MongoDB & Mongoose
+- Postman (for API docs)
+
+## Getting Started
+
+### Prerequisites
+- Node.js & npm
+- MongoDB (local or Atlas)
+
+
+### Installation
+1. Clone the repo
+2. Run `npm install`
+3. Set up a `.env` file (see below for example)
+4. Start the server: `node app.js`
+
+### Example .env file
+```
+MONGODB_URI=mongodb://localhost:27017/recipesdb
+PORT=3000
+RECIPE_COLLECTION_NAME=Recipe
+```
+
+### Notes on Running (ES Modules)
+- This project uses ES Modules (`import`/`export`).
+- Make sure you run with `node app.js` (not `npm start` unless your script is updated for ES Modules).
+
+### API Endpoints
+- `POST   /api/recipes`      - Create a new recipe
+- `GET    /api/recipes`      - Get all recipes
+- `GET    /api/recipes/:id`  - Get a recipe by ID
+- `PUT    /api/recipes/:id`  - Update a recipe by ID
+- `DELETE /api/recipes/:id`  - Delete a recipe by ID
+
+
+## API Testing with Postman
+- Import the provided `postman_collection.json` file into Postman.
+- All endpoints are pre-configured for local testing.
+- You can edit the environment or variables as needed.
+
+### Sample Request/Response
+
+#### Create Recipe (POST /api/recipes)
+Request body:
+```
+{
+	"title": "Pasta",
+	"ingredients": ["noodles", "sauce"],
+	"instructions": "Boil noodles. Add sauce."
+}
+```
+Response:
+```
+{
+	"_id": "...",
+	"title": "Pasta",
+	"ingredients": ["noodles", "sauce"],
+	"instructions": "Boil noodles. Add sauce.",
+	"createdAt": "...",
+	"__v": 0
+}
+```
+
+#### Error Response Example
+```
+{
+	"error": "All fields (title, ingredients, instructions) are required."
+}
+```
+
+## Folder Structure
+## Project Structure
+
+```
+CRUD/
+├── app.js                  # Main application entry point
+├── package.json            # Project metadata and dependencies
+├── postman_collection.json # Postman API collection
+├── README.md               # Project documentation
+├── .env                    # Environment variables (not committed)
+├── controllers/
+│   └── recipeController.js # Recipe controller logic
+├── models/
+│   └── Recipe.js           # Mongoose Recipe schema/model
+├── routes/
+│   └── recipeRoutes.js     # Recipe API routes
+├── views/                  # (Optional for future UI)
+```
+
+## License
+MIT
+====================================================================================================================================================================================================================
+recipeController.js
+
+// Import the Recipe model
+import Recipe from "../models/Recipe.js";
+
+// Import mongoose for ObjectId validation
+import mongoose from "mongoose";
+
+// Controller to create a new recipe
+export const createRecipe = async (req, res) => {
+  try {
+    // Destructure fields from request body
+    const { title, ingredients, instructions } = req.body;
+    // Validate required fields
+    if (!title || !ingredients || !instructions) {
+      return res
+        .status(400)
+        .json({
+          error: "All fields (title, ingredients, instructions) are required.",
+        });
+    }
+    // Validate ingredients is a non-empty array of strings
+    if (
+      !Array.isArray(ingredients) ||
+      ingredients.length === 0 ||
+      !ingredients.every((i) => typeof i === "string")
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Ingredients must be a non-empty array of strings." });
+    }
+    // Create a new Recipe document
+    const recipe = new Recipe({ title, ingredients, instructions });
+    // Save the recipe to the database
+    await recipe.save();
+    // Respond with the created recipe
+    res.status(201).json(recipe);
+  } catch (err) {
+    // Handle server or validation errors
+    res.status(500).json({ error: err.message || "Server error." });
+  }
+};
+
+// Controller to get all recipes
+export const getAllRecipes = async (req, res) => {
+  try {
+    // Find all recipes in the database
+    const recipes = await Recipe.find();
+    // Respond with the list of recipes
+    res.json(recipes);
+  } catch (err) {
+    // Handle server errors
+    res.status(500).json({ error: err.message || "Server error." });
+  }
+};
+
+// Controller to get a single recipe by its ID
+export const getRecipeById = async (req, res) => {
+  try {
+    // Extract the recipe ID from the request parameters
+    const { id } = req.params;
+    // Validate the ID is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid recipe ID." });
+    }
+    // Find the recipe by ID
+    const recipe = await Recipe.findById(id);
+    // If not found, return 404
+    if (!recipe) return res.status(404).json({ error: "Recipe not found." });
+    // Respond with the recipe
+    res.json(recipe);
+  } catch (err) {
+    // Handle server errors
+    res.status(500).json({ error: err.message || "Server error." });
+  }
+};
+
+// Controller to update a recipe by its ID
+export const updateRecipe = async (req, res) => {
+  try {
+    // Extract the recipe ID from the request parameters
+    const { id } = req.params;
+    // Destructure fields from request body
+    const { title, ingredients, instructions } = req.body;
+    // Validate the ID is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid recipe ID." });
+    }
+    // Validate required fields
+    if (!title || !ingredients || !instructions) {
+      return res
+        .status(400)
+        .json({
+          error: "All fields (title, ingredients, instructions) are required.",
+        });
+    }
+    // Validate ingredients is a non-empty array of strings
+    if (
+      !Array.isArray(ingredients) ||
+      ingredients.length === 0 ||
+      !ingredients.every((i) => typeof i === "string")
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Ingredients must be a non-empty array of strings." });
+    }
+    // Find the recipe by ID and update it
+    const recipe = await Recipe.findByIdAndUpdate(
+      id,
+      { title, ingredients, instructions },
+      { new: true, runValidators: true }, // Return the updated document and run schema validators
+    );
+    // If not found, return 404
+    if (!recipe) return res.status(404).json({ error: "Recipe not found." });
+    // Respond with the updated recipe
+    res.json(recipe);
+  } catch (err) {
+    // Handle server errors
+    res.status(500).json({ error: err.message || "Server error." });
+  }
+};
+
+// Controller to delete a recipe by its ID
+export const deleteRecipe = async (req, res) => {
+  try {
+    // Extract the recipe ID from the request parameters
+    const { id } = req.params;
+    // Validate the ID is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: "Invalid recipe ID." });
+    }
+    // Find the recipe by ID and delete it
+    const recipe = await Recipe.findByIdAndDelete(id);
+    // If not found, return 404
+    if (!recipe) return res.status(404).json({ error: "Recipe not found." });
+    // Respond with a success message
+    res.json({ message: "Recipe deleted." });
+  } catch (err) {
+    // Handle server errors
+    res.status(500).json({ error: err.message || "Server error." });
+  }
+};
+
+====================================================================================================================================================================================================================
+Recipe.js
+
+// Import mongoose for MongoDB object modeling
+import mongoose from 'mongoose';
+
+// Define the schema for a Recipe document
+const recipeSchema = new mongoose.Schema({
+  // Title of the recipe (required string)
+  title: {
+    type: String,
+    required: true,
+    trim: true // Remove whitespace from both ends
+  },
+  // List of ingredients (required array of strings)
+  ingredients: {
+    type: [String],
+    required: true
+  },
+  // Cooking instructions (required string)
+  instructions: {
+    type: String,
+    required: true
+  },
+  // Date when the recipe was created (defaults to now)
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+// Use environment variable for collection name if provided, else default to 'Recipe'
+const collectionName = process.env.RECIPE_COLLECTION_NAME ?? 'Recipe';
+
+// Export the Recipe model using the schema and the collection name.
+// This allows the collection name to be set via the RECIPE_COLLECTION_NAME environment variable,
+// making it flexible for different environments or naming conventions.
+export default mongoose.model(collectionName, recipeSchema);
+
+====================================================================================================================================================================================================================
+recipeRoutes.js
+
+// Import the Express framework
+import express from 'express';
+
+// Import the recipe controller which contains the logic for each route
+import * as recipeController from '../controllers/recipeController.js';
+
+// Create a new router instance
+const router = express.Router();
+
+// Route to create a new recipe (POST /api/recipes)
+router.post('/', recipeController.createRecipe);
+
+// Route to get all recipes (GET /api/recipes)
+router.get('/', recipeController.getAllRecipes);
+
+// Route to get a single recipe by ID (GET /api/recipes/:id)
+router.get('/:id', recipeController.getRecipeById);
+
+// Route to update a recipe by ID (PUT /api/recipes/:id)
+router.put('/:id', recipeController.updateRecipe);
+
+// Route to delete a recipe by ID (DELETE /api/recipes/:id)
+router.delete('/:id', recipeController.deleteRecipe);
+
+// Export the router to be used in app.js
+export default router;
+
+====================================================================================================================================================================================================================
+.env
+
+
+MONGODB_URI=mongodb://localhost:27017/recipesdb
+PORT=3000
+RECIPE_COLLECTION_NAME=Recipe
+
+====================================================================================================================================================================================================================
+app.js
+
+// Entry point for the Recipes CRUD app
+
+// Import the Express framework
+import express from 'express';
+
+// Import Mongoose for MongoDB object modeling
+import mongoose from 'mongoose';
+
+// Import the recipe routes
+import recipeRoutes from './routes/recipeRoutes.js';
+
+// Load environment variables from .env file
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Create an Express application instance
+const app = express();
+
+// Set the port from environment or default to 3000
+const PORT = process.env.PORT ?? 3000;
+
+// Set the MongoDB URI from environment or default to local
+const MONGODB_URI = process.env.MONGODB_URI ?? 'mongodb://localhost:27017/recipesdb';
+
+// Middleware to parse incoming JSON requests
+app.use(express.json());
+
+// Mount the recipe routes at /api/recipes
+app.use('/api/recipes', recipeRoutes);
+
+// Connect to MongoDB using Mongoose
+mongoose.connect(
+  MONGODB_URI, // Use env variable or default local URI
+  {
+    useNewUrlParser: true, // Use new URL string parser
+    useUnifiedTopology: true // Use new server discovery and monitoring engine
+  }
+)
+// If connection is successful, start the server
+.then(() => {
+  console.log(`Connected to MongoDB at ${MONGODB_URI}`);
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+})
+// If connection fails, log the error
+.catch((err) => {
+  console.error('MongoDB connection error:', err);
+});
+
+====================================================================================================================================================================================================================
